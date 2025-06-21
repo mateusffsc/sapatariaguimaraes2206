@@ -27,7 +27,7 @@ const mockOS: OrdemServico[] = [
     artigo: 'Sapato Social Preto',
     servico: 'Conserto de solado',
     status: 'em-andamento',
-    cadastrou: '18/06/2024',
+    cadastro: '18/06/2024',
     entrega: '25/06/2024',
     valor: 85.50,
     entrada: 40.00,

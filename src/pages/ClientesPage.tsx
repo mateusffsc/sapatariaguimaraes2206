@@ -34,7 +34,7 @@ const mockClientes: Cliente[] = [
     cpf: '987.654.321-00',
     telefone: '(11) 88888-8888',
     email: 'maria@email.com',
-    endereca: 'Av. Principal, 456',
+    endereco: 'Av. Principal, 456',
     cidade: 'São Paulo',
     cadastro: '10/02/2024',
     ultimaOS: '18/06/2024',
