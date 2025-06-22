@@ -202,41 +202,34 @@ export function NovaVendaModal({ isOpen, onClose }: NovaVendaModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
-      toast.error('Usuário não autenticado');
-      return;
-    }
-
     if (itensVenda.length === 0) {
       toast.error('Adicione pelo menos um produto à venda');
       return;
     }
 
-    const vendaData: CreateSaleData = {
-      client_id: clienteId ? parseInt(clienteId) : undefined,
-      total_price: totalVenda,
-      payment_status: 'paid', // Todas as formas de pagamento são consideradas pagas à vista
-      is_credit_sale: false,
-      created_by_user_id: parseInt(user.id),
-      payment_method: formaPagamento,
-    };
-
-    const items = itensVenda.map(item => ({
-      product_id: item.produtoId,
-      quantity: item.quantidade,
-      unit_price: item.precoUnitario
-    }));
-
     try {
-      await criarVenda.mutateAsync({
-        vendaData,
-        items
-      });
-      
+      const vendaData: CreateSaleData = {
+        client_id: clienteId ? parseInt(clienteId) : undefined,
+        total_price: totalVenda,
+        payment_status: 'paid',
+        is_credit_sale: false,
+        payment_method: formaPagamento,
+        created_by_user_id: user?.id ? parseInt(user.id) : 1
+      };
+
+      const items = itensVenda.map(item => ({
+        product_id: item.produtoId,
+        quantity: item.quantidade,
+        unit_price: item.precoUnitario
+      }));
+
+      await criarVenda.mutateAsync({ vendaData, items });
+      toast.success('Venda realizada com sucesso!');
       resetForm();
       onClose();
     } catch (error) {
       console.error('Erro ao criar venda:', error);
+      toast.error('Erro ao criar venda. Tente novamente.');
     }
   };
 
