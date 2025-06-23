@@ -1,10 +1,17 @@
 
 import React, { useState } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Plus } from 'lucide-react';
+import { useSaldoCaixa, useResumoHoje } from '../../hooks/useFinanceiro';
 
 export const CashRegister: React.FC = () => {
   const [cashOpen, setCashOpen] = useState(false);
-  const [cashBalance] = useState(2450.50);
+  
+  // Dados reais do Supabase
+  const { data: saldoCaixa = 0, isLoading: loadingSaldo } = useSaldoCaixa();
+  const { data: resumoHoje, isLoading: loadingResumo } = useResumoHoje();
+
+  const entradaHoje = resumoHoje?.totalEntradas || 0;
+  const saidaHoje = resumoHoje?.totalSaidas || 0;
 
   return (
     <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
@@ -29,7 +36,11 @@ export const CashRegister: React.FC = () => {
         <div className="bg-white/10 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <DollarSign size={24} />
-            <span className="text-2xl font-bold">R$ {cashBalance.toFixed(2)}</span>
+            {loadingSaldo ? (
+              <div className="h-8 w-20 bg-white/20 rounded animate-pulse"></div>
+            ) : (
+              <span className="text-2xl font-bold">R$ {saldoCaixa.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            )}
           </div>
           <p className="text-sm text-blue-100 mt-1">Saldo Atual</p>
         </div>
@@ -37,7 +48,11 @@ export const CashRegister: React.FC = () => {
         <div className="bg-white/10 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <TrendingUp size={24} className="text-green-300" />
-            <span className="text-2xl font-bold">R$ 1.240,00</span>
+            {loadingResumo ? (
+              <div className="h-8 w-20 bg-white/20 rounded animate-pulse"></div>
+            ) : (
+              <span className="text-2xl font-bold">R$ {entradaHoje.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            )}
           </div>
           <p className="text-sm text-blue-100 mt-1">Entradas Hoje</p>
         </div>
@@ -45,7 +60,11 @@ export const CashRegister: React.FC = () => {
         <div className="bg-white/10 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <TrendingDown size={24} className="text-red-300" />
-            <span className="text-2xl font-bold">R$ 380,00</span>
+            {loadingResumo ? (
+              <div className="h-8 w-20 bg-white/20 rounded animate-pulse"></div>
+            ) : (
+              <span className="text-2xl font-bold">R$ {saidaHoje.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            )}
           </div>
           <p className="text-sm text-blue-100 mt-1">Saídas Hoje</p>
         </div>

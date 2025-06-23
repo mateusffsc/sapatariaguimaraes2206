@@ -1,65 +1,39 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
-
-interface Cliente {
-  id: number;
-  nome: string;
-  cpf: string;
-  telefone: string;
-  email: string;
-  endereco: string;
-  cidade: string;
-  cadastro: string;
-  ultimaOS: string;
-  status: 'ativo' | 'inativo';
-}
-
-const mockClientes: Cliente[] = [
-  {
-    id: 1,
-    nome: 'João Silva',
-    cpf: '123.456.789-00',
-    telefone: '(11) 99999-9999',
-    email: 'joao@email.com',
-    endereco: 'Rua das Flores, 123',
-    cidade: 'São Paulo',
-    cadastro: '15/01/2024',
-    ultimaOS: '20/06/2024',
-    status: 'ativo'
-  },
-  {
-    id: 2,
-    nome: 'Maria Santos',
-    cpf: '987.654.321-00',
-    telefone: '(11) 88888-8888',
-    email: 'maria@email.com',
-    endereco: 'Av. Principal, 456',
-    cidade: 'São Paulo',
-    cadastro: '10/02/2024',
-    ultimaOS: '18/06/2024',
-    status: 'ativo'
-  }
-];
+import { useClientes, useBuscarClientes } from '../hooks/useClientes';
+import { type Cliente } from '../lib/supabase';
+import { PageHeader } from '../components/layout/PageHeader';
 
 export const ClientesPage: React.FC = () => {
-  const [clientes, setClientes] = useState<Cliente[]>(mockClientes);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'ativo' | 'inativo'>('todos');
   const [showForm, setShowForm] = useState(false);
 
-  const filteredClientes = clientes.filter(cliente =>
-    cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cliente.cpf.includes(searchTerm) ||
-    cliente.telefone.includes(searchTerm)
-  );
+  // Usar busca quando há termo de pesquisa, senão listar todos
+  const { data: todosClientes = [], isLoading: loadingTodos } = useClientes();
+  const { data: clientesBusca = [], isLoading: loadingBusca } = useBuscarClientes(searchTerm);
+
+  // Determinar quais dados usar e aplicar filtros
+  const clientesFiltrados = useMemo(() => {
+    const clientes = searchTerm.trim().length >= 2 ? clientesBusca : todosClientes;
+    
+    if (statusFilter === 'todos') {
+      return clientes;
+    }
+    
+    return clientes.filter(cliente => cliente.status === statusFilter);
+  }, [todosClientes, clientesBusca, searchTerm, statusFilter]);
+
+  const isLoading = searchTerm.trim().length >= 2 ? loadingBusca : loadingTodos;
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-          <p className="text-gray-600">Gerencie seus clientes cadastrados</p>
-        </div>
+      <PageHeader>
         <button
           onClick={() => setShowForm(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
@@ -67,7 +41,7 @@ export const ClientesPage: React.FC = () => {
           <Plus size={20} />
           <span>Novo Cliente</span>
         </button>
-      </div>
+      </PageHeader>
 
       <div className="bg-white rounded-xl shadow-sm">
         <div className="p-6 border-b border-gray-200">
@@ -82,10 +56,14 @@ export const ClientesPage: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-              <option>Todos os status</option>
-              <option>Ativos</option>
-              <option>Inativos</option>
+            <select 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'todos' | 'ativo' | 'inativo')}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="todos">Todos os status</option>
+              <option value="ativo">Ativos</option>
+              <option value="inativo">Inativos</option>
             </select>
           </div>
         </div>
@@ -118,7 +96,47 @@ export const ClientesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredClientes.map((cliente) => (
+              {isLoading ? (
+                // Loading skeleton
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-28 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-3 w-36 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-40 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-3 w-20 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : clientesFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    {searchTerm.trim().length >= 2 
+                      ? `Nenhum cliente encontrado para "${searchTerm}"`
+                      : 'Nenhum cliente cadastrado'
+                    }
+                  </td>
+                </tr>
+              ) : (
+                clientesFiltrados.map((cliente) => (
                 <tr key={cliente.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -139,10 +157,10 @@ export const ClientesPage: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {cliente.cadastro}
+                    {formatDate(cliente.created_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {cliente.ultimaOS}
+                    {formatDate(cliente.updated_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -167,7 +185,8 @@ export const ClientesPage: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
