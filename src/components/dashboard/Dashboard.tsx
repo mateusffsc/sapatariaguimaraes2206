@@ -4,7 +4,7 @@ import { CashRegister } from './CashRegister';
 import { DailyTasks } from './DailyTasks';
 import { QuickActions } from './QuickActions';
 import { RecentTransactions } from './RecentTransactions';
-import { RoleBasedStats, RoleBasedActions, FeatureByRole } from '../UserLevelInterface';
+import { RoleBasedStats, RoleBasedActions, FeatureByRole } from '../../components/UserLevelInterface';
 import { AuditLogs } from '../AuditLogs';
 import { useAudit } from '@/hooks/useAudit';
 import { useCurrentUser } from '@/hooks/useAuth';
